@@ -20,6 +20,9 @@ export class RestaurantsService {
     // Calculate the offset based on the page and limit
     const skip = (page - 1) * limit;
 
+    // Ensure limit is a number
+    const numericLimit = Number(limit);
+
     // Query the database with search and pagination
     const restaurants = await this.prisma.restaurants.findMany({
       where: {
@@ -29,24 +32,22 @@ export class RestaurantsService {
         },
       },
       skip,
-      take: limit,
+      take: numericLimit, // Use the converted number here
       include: {
         foods: true, // Include related foods
       },
     });
 
-    // Ensure foods is an array and process each food item
+    // Process and return the data
     const processedRestaurants = restaurants.map((restaurant) => {
-      const processedFoods = restaurant.foods.map((food) => {
-        return {
-          ...food,
-          max_price: food.max_price ? food.max_price.toNumber() : 0, // Convert Decimal to number
-        };
-      });
+      const processedFoods = restaurant.foods.map((food) => ({
+        ...food,
+        max_price: food.max_price ? food.max_price.toNumber() : 0, // Convert Decimal to number
+      }));
 
       return {
         ...restaurant,
-        foods: processedFoods, // Foods should be an array here
+        foods: processedFoods,
       };
     });
 
@@ -56,7 +57,9 @@ export class RestaurantsService {
       meta: {
         total: await this.prisma.restaurants.count(), // Count for pagination metadata
         page,
-        last_page: Math.ceil((await this.prisma.restaurants.count()) / limit),
+        last_page: Math.ceil(
+          (await this.prisma.restaurants.count()) / numericLimit,
+        ),
       },
     };
   }

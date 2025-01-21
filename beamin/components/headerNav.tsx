@@ -2,7 +2,7 @@
 import { Button, Select } from "antd";
 import { SearchProps } from "antd/es/input";
 import Search from "antd/es/input/Search";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   HomeOutlined,
   SearchOutlined,
@@ -13,17 +13,38 @@ import { useRouter } from "next/navigation";
 
 export default function HeaderNav() {
   const router = useRouter();
-  const onSearch: SearchProps["onSearch"] = (value, _e, info) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check if the user is logged in by checking for the token in localStorage
+    const token = localStorage.getItem("accessToken");
+    console.log("token: ", token);
+    if (token) {
+      setIsLoggedIn(true); // User is logged in
+    } else {
+      setIsLoggedIn(false); // User is not logged in
+    }
+  }, []);
+
+  const onSearch: SearchProps["onSearch"] = (value) => {
     window.location.href = `/sreach?query=${value}`;
   };
+
   const navigation = () => {
     router.push("/dashboard");
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken"); // Remove token from localStorage
+    setIsLoggedIn(false); // Update login state
+    router.push("/login"); // Redirect to login page
+  };
+
   return (
-    <div className="w-full h-fix bg-white flex flex-row fixed  py-3 gap-4 justify-items-center	justify-center z-50	">
+    <div className="w-full h-fix bg-white flex flex-row fixed py-3 gap-4 justify-items-center justify-center z-50">
       <div
         onClick={navigation}
-        className="flex-none w-fit h-full ml-10 cursor-pointer "
+        className="flex-none w-fit h-full ml-10 cursor-pointer"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -36,8 +57,8 @@ export default function HeaderNav() {
           </g>
         </svg>
       </div>
-      <div className="grow  flex flex-row items-center gap-9	 ">
-        <Select className="ml-10 w-28 	"></Select>
+      <div className="grow flex flex-row items-center gap-9">
+        <Select className="ml-10 w-28" />
         <Search
           className="w-1/3"
           placeholder="input search text"
@@ -46,10 +67,10 @@ export default function HeaderNav() {
           onSearch={onSearch}
         />
       </div>
-      <div className="flex-none w-1/4  flex flex-row items-center  py-2">
+      <div className="flex-none w-1/4 flex flex-row items-center py-2">
         <Button
           href="/dashboard"
-          className="font-normal  leading-5 btn-home	"
+          className="font-normal leading-5 btn-home"
           style={{
             fontSize: "18px",
             height: "100%",
@@ -60,19 +81,37 @@ export default function HeaderNav() {
         >
           Trang Chủ
         </Button>
-        <Button
-          href="/login"
-          className="font-normal  leading-5 btn-home	"
-          style={{
-            fontSize: "18px",
-            height: "100%",
-            color: "rgb(128, 128, 137)",
-          }}
-          type="text"
-          icon={<SolutionOutlined />}
-        >
-          Tài Khoản
-        </Button>
+        {isLoggedIn ? (
+          <>
+            <Button
+              onClick={handleLogout}
+              className="font-normal leading-5 btn-home"
+              style={{
+                fontSize: "18px",
+                height: "100%",
+                color: "rgb(128, 128, 137)",
+              }}
+              type="text"
+              icon={<SolutionOutlined />}
+            >
+              Đăng xuất
+            </Button>
+          </>
+        ) : (
+          <Button
+            href="/login"
+            className="font-normal leading-5 btn-home"
+            style={{
+              fontSize: "18px",
+              height: "100%",
+              color: "rgb(128, 128, 137)",
+            }}
+            type="text"
+            icon={<SolutionOutlined />}
+          >
+            Tài Khoản
+          </Button>
+        )}
         <Button
           href="/cart"
           type="text"
@@ -85,7 +124,7 @@ export default function HeaderNav() {
           icon={<ShoppingCartOutlined />}
         ></Button>
         <span
-          className="text-xs bg-red-600 relative rounded w-full text-white  bottom-3 right-4 text-center"
+          className="text-xs bg-red-600 relative rounded w-full text-white bottom-3 right-4 text-center"
           style={{ width: "15px", borderRadius: "50px" }}
         >
           1
