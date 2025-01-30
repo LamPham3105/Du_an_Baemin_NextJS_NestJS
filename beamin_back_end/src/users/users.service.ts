@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -20,7 +24,7 @@ export class UsersService {
     });
 
     if (existingUser) {
-      throw new Error('Username already exists');
+      throw new BadRequestException('Username already exists');
     }
 
     // Check if the email already exists (optional but common)
@@ -29,7 +33,7 @@ export class UsersService {
     });
 
     if (existingEmail) {
-      throw new Error('Email already exists');
+      throw new BadRequestException('Email already exists');
     }
 
     // Check if the phone number already exists (optional but common)
@@ -38,7 +42,7 @@ export class UsersService {
     });
 
     if (existingPhoneNumber) {
-      throw new Error('Phone number already exists');
+      throw new BadRequestException('Phone number already exists');
     }
 
     // Hash the password
@@ -66,10 +70,20 @@ export class UsersService {
     });
   }
 
-  async findByUsername(username: string): Promise<any | null> {
+  async findByUsername(username?: string): Promise<any | null> {
     return this.prisma.users.findUnique({
       where: { username },
     });
+  }
+
+  async getUserById(id: number) {
+    const user = this.prisma.users.findUnique({
+      where: { id: Number(id) },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
   async validateUser(username: string, password: string): Promise<any | null> {

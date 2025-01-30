@@ -6,28 +6,34 @@ export class RestaurantsService {
   private prisma = new PrismaClient();
 
   async getRestaurants() {
-    return this.prisma.restaurants.findMany({
-      include: { foods: true },
+    const restaurants = await this.prisma.restaurants.findMany({
+      where: {
+        open_time: { gt: new Date() },
+      },
     });
+
+    return {
+      title:
+        restaurants.length != 0
+          ? 'Hôm Nay Ăn Gì'
+          : 'Không có quán nào hoạt động',
+      restaurants: restaurants,
+    };
   }
 
-  // Get restaurants with pagination and search
   async getPaginationRestaurants(
     page: number = 1,
     limit: number = 10,
     search: string = '',
   ) {
-    // Calculate the offset based on the page and limit
     const skip = (page - 1) * limit;
 
-    // Ensure limit is a number
     const numericLimit = Number(limit);
 
-    // Query the database with search and pagination
     const restaurants = await this.prisma.restaurants.findMany({
       where: {
         name: {
-          contains: search, // Search restaurants by name
+          contains: search,
           mode: 'insensitive', // Case-insensitive search
         },
       },
@@ -38,7 +44,6 @@ export class RestaurantsService {
       },
     });
 
-    // Process and return the data
     const processedRestaurants = restaurants.map((restaurant) => {
       const processedFoods = restaurant.foods.map((food) => ({
         ...food,
@@ -51,11 +56,10 @@ export class RestaurantsService {
       };
     });
 
-    // Return the processed data with paginated metadata
     return {
       data: processedRestaurants,
       meta: {
-        total: await this.prisma.restaurants.count(), // Count for pagination metadata
+        total: await this.prisma.restaurants.count(),
         page,
         last_page: Math.ceil(
           (await this.prisma.restaurants.count()) / numericLimit,
@@ -64,7 +68,6 @@ export class RestaurantsService {
     };
   }
 
-  // Get a single restaurant by id
   async getRestaurantById(id: number) {
     const restaurant = await this.prisma.restaurants.findUnique({
       where: { id },
@@ -72,7 +75,7 @@ export class RestaurantsService {
     });
 
     if (!restaurant) {
-      return null; // Or throw an exception if desired
+      return null;
     }
 
     // Process foods and convert Decimal to number for max_price

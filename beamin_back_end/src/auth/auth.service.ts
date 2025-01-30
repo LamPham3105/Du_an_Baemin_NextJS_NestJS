@@ -23,19 +23,23 @@ export class AuthService {
       throw new Error('User not found');
     }
 
+    const userFind = await this.usersService.findByUsername(
+      user.usernameOrEmail,
+    );
+
     // Create the payload for the JWT
-    const payload = { username: user.username, sub: user.id };
+    const payload = { username: userFind.username, sub: userFind.id };
 
     // Generate the access token using the payload
     const accessToken = this.jwtService.sign(payload);
 
     // Exclude the password field from the user data
-    const { password, ...userData } = user; // Destructure to exclude password
+    const { password, ...userData } = userFind; // Destructure to exclude password
 
     // Return the access token along with user data (excluding password)
     return {
       accessToken,
-      user: userData, // Return user data without the password field
+      user: userFind.id, // Return user data without the password field
     };
   }
 }

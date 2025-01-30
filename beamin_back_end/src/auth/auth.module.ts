@@ -10,7 +10,7 @@ import { LocalStrategy } from './strategies/local.strategy';
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: 'SECRET_KEY', // Replace with environment variable
+      secret: 'SECRET_KEY', // Thay thế bằng biến môi trường
       signOptions: { expiresIn: '1h' },
     }),
   ],
